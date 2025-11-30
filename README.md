@@ -1,21 +1,122 @@
 # Task Analyzer
 
-Task Analyzer is a simple full-stack application built to create and manage tasks.  
-The main idea of the project is to let users enter a task, set how important it is, add a due date, and mention how many hours the task will take. The project uses Django for the backend API and React for the frontend UI.
+Task Analyzer is a simple full-stack project that allows users to create and manage tasks.  
+It is built with Django on the backend and React on the frontend.  
+The project focuses only on task handling: adding tasks, setting importance, due dates, and hours.
+
+---
 
 ## What the Project Does
 
-- Lets the user add a task with:
+- Lets the user create a task with:
   - Title
-  - Importance level
+  - Importance value
   - Due date
-  - Estimated hours
-- Stores all tasks in a SQLite database
-- Displays every task clearly on the frontend
-- Connects the React UI to Django through an API
-- Backend handles creating, updating, listing, and deleting tasks
+  - Hours needed
+- Shows all tasks on the frontend
+- Stores data in a SQLite database
+- Uses a Django REST API for all operations
+- Supports basic CRUD (Create, Read, Update, Delete)
 
-The project is small and focused only on task handling. There are no extra features like login or filters unless they are added later.
+---
+
+## How the Logic Is Written
+
+This section explains how the backend and frontend work internally.
+
+### 1. Backend Logic (Django REST Framework)
+
+**Model (tasks/models.py)**  
+Defines the structure of a task:
+
+```python
+class Task(models.Model):
+    title = models.CharField(max_length=200)
+    importance = models.IntegerField()
+    due_date = models.DateField()
+    hours = models.FloatField()
+```
+
+**Serializer (tasks/serializers.py)**  
+Converts task objects to JSON and back:
+
+```python
+class TaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Task
+        fields = '__all__'
+```
+
+**Views (tasks/views.py)**  
+Handles listing, creating, updating, and deleting tasks:
+
+```python
+class TaskListCreateView(generics.ListCreateAPIView):
+    queryset = Task.objects.all()
+    serializer_class = TaskSerializer
+
+class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Task.objects.all()
+    serializer_class = TaskSerializer
+```
+
+**URLs (task_analyzer/urls.py)**  
+Exposes the API:
+
+```python
+urlpatterns = [
+    path('tasks/', TaskListCreateView.as_view()),
+    path('tasks/<int:pk>/', TaskDetailView.as_view()),
+]
+```
+
+---
+
+### 2. Frontend Logic (React)
+
+**Fetching tasks**
+
+```javascript
+useEffect(() => {
+  axios.get("http://127.0.0.1:8000/tasks/")
+    .then(res => setTasks(res.data));
+}, []);
+```
+
+**Adding a task**
+
+```javascript
+axios.post("http://127.0.0.1:8000/tasks/", {
+  title,
+  importance,
+  due_date,
+  hours
+});
+```
+
+**Updating a task**
+
+```javascript
+axios.put(`http://127.0.0.1:8000/tasks/${id}/`, updatedData);
+```
+
+**Deleting a task**
+
+```javascript
+axios.delete(`http://127.0.0.1:8000/tasks/${id}/`);
+```
+
+---
+
+### 3. Full System Flow
+
+1. React sends data to Django  
+2. Django saves tasks in the database  
+3. React fetches tasks and displays them  
+4. Any update or delete goes through the API  
+5. UI updates after every operation  
+
+---
 
 ## Project Structure
 
@@ -24,21 +125,23 @@ project-root/
 │── db.sqlite3
 │── manage.py
 │── requirements/
-│── tasks/               # App that contains models, views, serializers
-│── task_analyzer/       # Django project configuration
-│── frontend/            # React code for the UI
-│── venv/                # Virtual environment (Windows)
+│── tasks/
+│── task_analyzer/
+│── frontend/
+│── venv/
 └── README.md
 ```
 
-## How to Run the Backend (Windows)
+---
 
-1. Activate the virtual environment:
+## Backend Setup (Windows)
+
+1. Activate virtual environment:
 ```
 venv\Scripts\activate
 ```
 
-2. Install required packages:
+2. Install requirements:
 ```
 pip install -r requirements.txt
 ```
@@ -48,58 +151,47 @@ pip install -r requirements.txt
 python manage.py migrate
 ```
 
-4. Start the backend server:
+4. Run the server:
 ```
 python manage.py runserver
 ```
 
-Backend runs at:
+Backend URL:
 http://127.0.0.1:8000/
 
-## How to Run the Frontend
+---
 
-1. Go into the frontend folder:
+## Frontend Setup
+
+1. Go to frontend:
 ```
 cd frontend
 ```
 
-2. Install dependencies:
+2. Install packages:
 ```
 npm install
 ```
 
-3. Start the frontend:
+3. Start the app:
 ```
 npm start
 ```
 
-Frontend runs at:
+Frontend URL:
 http://localhost:3000/
 
-## API Overview
+---
 
-The backend exposes these endpoints:
+## API Endpoints
 
-- GET `/tasks/` – returns all tasks
-- POST `/tasks/` – creates a new task
-- GET `/tasks/<id>/` – returns one task
-- PUT `/tasks/<id>/` – updates a task
-- DELETE `/tasks/<id>/` – deletes a task
+- GET /tasks/  
+- POST /tasks/  
+- GET /tasks/<id>/  
+- PUT /tasks/<id>/  
+- DELETE /tasks/<id>/  
 
-Each task contains:
-- Title  
-- Importance  
-- Due date  
-- Hours  
+---
 
-## Purpose of This Project
 
-This project was built mainly to practice:
-- Django REST Framework
-- API development
-- React frontend development
-- Connecting frontend and backend
-- Basic CRUD operations
-
-It is kept simple on purpose, so it is easier to expand later with features like filtering, sorting, authentication, or dashboards.
 
